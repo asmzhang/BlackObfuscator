@@ -11,6 +11,8 @@ dependencies {
   compile project(':dex-obfuscator')
   compile project(':d2j-base-cmd')
   compile project(':dexlib2')
+//   compile 'org.antlr:antlr-runtime:3.5.2'
+//   compile 'org.antlr:antlr4-runtime:4.5'
 }
 
 task bin_gen(type: JavaExec) {

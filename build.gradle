@@ -4,6 +4,29 @@ allprojects  {
   apply plugin: 'eclipse'
   group = 'com.github.asmzhang.BlackObfuscator'
   version = '2.3'
+
+  // 配置uploadArchives任务发布到本地Maven仓库
+  // ./gradlew uploadArchives
+  uploadArchives {
+      repositories {
+          mavenDeployer {
+
+          // repository(url: uri('../localRepo'))
+
+          // 发布到本地Maven仓库
+          repository(url: "file://${System.properties['user.home']}/.m2/repository")
+          
+          // // 可选：配置POM文件的元数据
+          // pom.project {
+          //     name 'BlackObfuscator'
+          //     packaging 'jar'
+          //     description 'DEX控制流混淆工具'
+          //     url 'https://github.com/CodingGay/BlackObfuscator'
+          // }
+
+          }
+      }
+  }
 }
 
 defaultTasks('clean','distZip')
