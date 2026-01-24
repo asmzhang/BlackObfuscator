@@ -1,113 +1,144 @@
-allprojects  {
-  apply plugin: 'maven'
-  apply plugin: 'idea'
-  apply plugin: 'eclipse'
-  group = 'com.github.asmzhang.BlackObfuscator'
-  version = '2.3'
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'idea'
+    id 'eclipse'
+}
 
-  // 配置uploadArchives任务发布到本地Maven仓库
-  // ./gradlew uploadArchives
-  uploadArchives {
-      repositories {
-          mavenDeployer {
+group = 'com.github.asmzhang.BlackObfuscator'
+version = '2.2'
 
-          // repository(url: uri('../localRepo'))
+// # 仅删除本地 Maven 仓库中的项目文件
+// .\gradlew deleteFromMavenLocal
 
-          // 发布到本地Maven仓库
-          repository(url: "file://${System.properties['user.home']}/.m2/repository")
-          
-          // // 可选：配置POM文件的元数据
-          // pom.project {
-          //     name 'BlackObfuscator'
-          //     packaging 'jar'
-          //     description 'DEX控制流混淆工具'
-          //     url 'https://github.com/CodingGay/BlackObfuscator'
-          // }
+// # 重新发布
+// .\gradlew publishToMavenLocal
 
-          }
-      }
-  }
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = group
+            artifactId = 'BlackObfuscator'
+            version = version
+        }
+    }
+    repositories {
+        maven {
+            url = "file://${System.properties['user.home']}/.m2/repository"
+        }
+    }
+}
+
+task deleteFromMavenLocal {
+    doLast {
+        def localRepoPath = new File("${System.properties['user.home']}/.m2/repository")
+        def groupPath = project.group.toString().replace('.', '/')
+        def projectPath = "${localRepoPath}/${groupPath}"
+        def projectDir = new File(projectPath)
+        
+        if (projectDir.exists()) {
+            println "正在删除本地 Maven 仓库中的项目文件: ${projectPath}"
+            delete projectDir
+            println "已删除: ${projectPath}"
+        } else {
+            println "本地 Maven 仓库中未找到项目文件: ${projectPath}"
+        }
+    }
 }
 
 defaultTasks('clean','distZip')
 
 subprojects {
-  apply plugin: 'java'
-  apply plugin: 'maven'
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 
-  task packageSources(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-  }
-  artifacts.archives packageSources
-  repositories {
-    mavenCentral()
-  }
+    group = rootProject.group
+    version = rootProject.version
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                groupId = project.group
+                artifactId = project.name
+                version = project.version
+                from components.java
+            }
+        }
+        repositories {
+            maven {
+                url = "file://${System.properties['user.home']}/.m2/repository"
+            }
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
 
 // == support provided scope
-  configurations {
-    provided
-  }
-  sourceSets {
-      main { compileClasspath += configurations.provided }
-      test {
-        compileClasspath += configurations.provided
-      }
-  }
+    configurations {
+        provided
+    }
+    sourceSets {
+        main { compileClasspath += configurations.provided }
+        test {
+            compileClasspath += configurations.provided
+        }
+    }
 // == end
 
-  [compileJava, compileTestJava]*.options.collect {options ->options.encoding = 'UTF-8'}
+    [compileJava, compileTestJava]*.options.collect {options ->options.encoding = 'UTF-8'}
 
-  dependencies {
-    testCompile group: 'junit', name: 'junit', version:'4.11'
-    compile fileTree(dir: 'libs', include: '*.jar')
-  }
+    dependencies {
+        testImplementation group: 'junit', name: 'junit', version:'4.11'
+        implementation fileTree(dir: 'libs', include: '*.jar')
+    }
 
-  jar {
-    manifest {
-      attributes("Implementation-Title": project.name,
+    jar {
+        manifest {
+            attributes("Implementation-Title": project.name,
                  "Implementation-Version": project.version,
                  "Build-Time": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                  "Revision":"${getRevision()}",
                  "Build-Number": System.env.BUILD_NUMBER?System.env.BUILD_NUMBER:"-1",
-      )
+            )
+        }
+        from (project.parent.projectDir)  {
+            include 'NOTICE.txt'
+            include 'LICENSE.txt'
+            into('META-INF')
+        }
     }
-    from (project.parent.projectDir)  {
-      include 'NOTICE.txt'
-      include 'LICENSE.txt'
-      into('META-INF')
-    }
-  }
 }
 
 def getRevision() {
-  if (System.env.BUILD_REVISION) {
-    return System.env.BUILD_REVISION
-  }
-  if (System.env.GIT_REVISION) {
-    return System.env.GIT_REVISION
-  }
-  if (System.env.MERCURIAL_REVISION) {
-    System.env.MERCURIAL_REVISION
-  }
-
-  def ver = null;
-  try {
-    ver = 'git rev-parse --short HEAD'.execute().text.trim()
-  } catch (e) {
-    // ignore
-  }
-  if (!ver) {
-    try {
-      ver = 'hg id -i -b -t'.execute().text.split(' ')[0];
-    } catch (e) {
-      // ignore
+    if (System.env.BUILD_REVISION) {
+        return System.env.BUILD_REVISION
     }
-  }
-  if (!ver) {
-    ver = "HEAD"
-  }
-  return ver
+    if (System.env.GIT_REVISION) {
+        return System.env.GIT_REVISION
+    }
+    if (System.env.MERCURIAL_REVISION) {
+        System.env.MERCURIAL_REVISION
+    }
+
+    def ver = null;
+    try {
+        ver = 'git rev-parse --short HEAD'.execute().text.trim()
+    } catch (e) {
+        // ignore
+    }
+    if (!ver) {
+        try {
+            ver = 'hg id -i -b -t'.execute().text.split(' ')[0];
+        } catch (e) {
+            // ignore
+        }
+    }
+    if (!ver) {
+        ver = "HEAD"
+    }
+    return ver
 }
