@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.github.asmzhang.BlackObfuscator'
-version = '2.2'
+version = '2.3'
 
 // # 仅删除本地 Maven 仓库中的项目文件
 // .\gradlew deleteFromMavenLocal
