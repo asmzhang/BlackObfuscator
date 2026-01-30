@@ -5,6 +5,10 @@ import com.googlecode.dex2jar.ir.stmt.*;
 import top.niunaijun.obfuscator.chain.FlowObfuscator;
 import top.niunaijun.obfuscator.chain.IfObfuscator;
 import top.niunaijun.obfuscator.chain.SubObfuscator;
+import top.niunaijun.obfuscator.chain.SemanticObfuscator;
+import top.niunaijun.obfuscator.chain.RuntimeObfuscator;
+import top.niunaijun.obfuscator.chain.ErrorSemanticObfuscator;
+import top.niunaijun.obfuscator.chain.LicenseObfuscator;
 import top.niunaijun.obfuscator.chain.base.ObfuscatorChain;
 
 import java.util.*;
@@ -29,9 +33,16 @@ public class IRObfuscator {
 	public IRObfuscator(ObfuscatorConfiguration configuration) {
 		this.configuration = configuration;
 		this.chains = new LinkedList<>();
-		this.chains.add(new FlowObfuscator(configuration));
-		this.chains.add(new SubObfuscator(configuration));
-		this.chains.add(new IfObfuscator(configuration));
+		// 只保留 FlowObfuscator 进行单独测试
+        this.chains.add(new FlowObfuscator(configuration));
+        this.chains.add(new SubObfuscator(configuration));
+        this.chains.add(new IfObfuscator(configuration));
+
+		// 暂时注释其他混淆器
+		// this.chains.add(new RuntimeObfuscator(configuration));
+		// this.chains.add(new LicenseObfuscator(configuration));
+		// this.chains.add(new SemanticObfuscator(configuration));
+		// this.chains.add(new ErrorSemanticObfuscator(configuration));
 	}
 
 	public void reBuildInstructions(IrMethod ir) {
