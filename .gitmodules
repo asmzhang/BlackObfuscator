@@ -1,0 +1,4 @@
+[submodule "cfr"]
+	path = cfr
+	url = https://github.com/asmzhang/cfr.git
+	branch = my
